@@ -258,6 +258,20 @@ class CubeMXImporter(object):
 
         self.logger.info("Successfully imported application files")
 
+    def syncBackApplication(self):
+        """Import generated application code inside the Eclipse project"""
+        dstIncludeDir = os.path.join(self.cubemxprojectpath, "Inc")
+        dstSourceDir = os.path.join(self.cubemxprojectpath, "Src")
+        srcIncludeDir = os.path.join(self.eclipseprojectpath, "include")
+        srcSourceDir = os.path.join(self.eclipseprojectpath, "src")
+
+        locations = ((srcIncludeDir, dstIncludeDir), (srcSourceDir, dstSourceDir))
+
+        for loc in locations:
+            self.copyTreeContent(loc[0], loc[1])
+
+        self.logger.info("Successfully synced back application files")
+
     def importCMSIS(self):
         """Import CMSIS package and CMSIS-DEVICE adapter by ST inside the Eclipse project"""
         cubeMXVersion = 417
@@ -522,6 +536,10 @@ if __name__ == "__main__":
     parser.add_argument('--dryrun', action='store_true',
                         help="Doesn't perform operations - for debug purpose")
 
+    parser.add_argument('--syncback', action='store_true',
+                        help="Synchronize the application files in Eclipse's Src directory back to CubeMX project")
+
+
     args = parser.parse_args()
 
     if args.verbose == 3:
@@ -536,12 +554,15 @@ if __name__ == "__main__":
     cubeImporter.eclipseProjectPath = args.eclipse_path
     cubeImporter.cubeMXProjectPath = args.cubemx_path
     cubeImporter.parseEclipseProjectFile()
-    cubeImporter.deleteOriginalEclipseProjectFiles()
-    cubeImporter.importApplication()
-    cubeImporter.importHAL()
-    cubeImporter.importCMSIS()
-    cubeImporter.importMiddlewares()
-    cubeImporter.saveEclipseProjectFile()
-    cubeImporter.patchMEM_LDFile()
-    # cubeImporter.addCIncludes(["../middlewares/freertos"])
-    # cubeImporter.printEclipseProjectFile()
+    if not args.syncback:
+        cubeImporter.deleteOriginalEclipseProjectFiles()
+        cubeImporter.importApplication()
+        cubeImporter.importHAL()
+        cubeImporter.importCMSIS()
+        cubeImporter.importMiddlewares()
+        cubeImporter.saveEclipseProjectFile()
+        cubeImporter.patchMEM_LDFile()
+        # cubeImporter.addCIncludes(["../middlewares/freertos"])
+        # cubeImporter.printEclipseProjectFile()
+    else:
+        cubeImporter.syncBackApplication()
